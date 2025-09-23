@@ -27,13 +27,13 @@ This documentation describes the **LilyGO T-Beam V1.2** with:
 - sensirion/sensirion-sps particicle matter SPS30 library
 - lewisxhe/AXP202X_Library power control T-Beam
 - RobTillaart/AM2315C library for the i2c AM2315C sensor
-- espressif32@3.5.0 platform with board ttgo-t-beam
+- espressif32@6.9.0 platform with board lilygo t-beam
 
-The platformio.ini takes care for the requied settings end libraries. Most libraries are already included in the project sources.
+The **platformio.ini** takes care for the required settings end libraries. Most libraries are already included in the project sources.
 
 ## Instructions
 ### LoRaWan TTN keys
-In the file configuration.h the TTN keys APPEUI an APPKEY are defined.
+In the file **configuration.h** the TTN keys APPEUI an APPKEY are defined.
 The unique DEVEUI key is obtained from the T-BEAM board id.
 
 ## TTN interface
@@ -61,3 +61,4 @@ Example JSON measurement message:
 
 Example JSON status message:
 > {"latitude":52.224578,"longitude":6.0061902,"alt":0.0,"hdop":1.61,vbat":4.099,"SwVer":3.02 }
+
