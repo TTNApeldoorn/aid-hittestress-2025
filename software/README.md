@@ -1,6 +1,6 @@
 
-# Homerus Climate sensor 2023
-These climate sensors are designed for the Homerus-Energiek project in Apeldoorn.
+# LIFE-IP Climate sensor 2025
+These climate sensors are designed for the LIFE-IP climate adaption project in Apeldoorn.
 
 ## Hardware:
 - LilyGO TTGO T-Beam V1.2 - LoRa 868MHz - NEO-M8N GPS - ESP32 
@@ -61,5 +61,6 @@ Example JSON measurement message:
 
 Example JSON status message:
 > {"latitude":52.224578,"longitude":6.0061902,"alt":0.0,"hdop":1.61,vbat":4.099,"SwVer":3.02 }
+
 
 
