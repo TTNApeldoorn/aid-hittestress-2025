@@ -10,7 +10,7 @@
 class Gps {
   public:
     Gps() {}
-    void init();
+    bool init();
     bool read();
 
     float lat, lng;

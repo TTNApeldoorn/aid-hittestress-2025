@@ -11,6 +11,7 @@ class Sps30 {
   public:
     Sps30() {}
     bool init();
+    void startManaualFanCleaning();
     bool read();
     float pm10, pm2_5, pm1_0;
 

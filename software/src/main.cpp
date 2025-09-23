@@ -20,25 +20,18 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "LoRaBoards.h"
+#include "utilities.h"
+#include "pmu.h"
 #include "rom/rtc.h"
-#include <Wire.h>
 #include "AM2315C.h"
 #include "ttn.h"
 #include "gps.h"
 #include "mysps30.h"
 
-//bool pmu_irq = false;
-
-bool packetSent = false, packetQueued = false;
-bool sensorCycle = false, gpsCycle = false;
-int start;
-
 // deep sleep support
 RTC_DATA_ATTR int bootCount = 0;
-//esp_sleep_source_t wakeCause;  // the reason we booted this time
 
-// payload structs
+// LoRa payload structs
 struct Msg {
   int16_t temp, hum, pm2_5, pm10, batt, pm1_0;
 };
@@ -55,31 +48,22 @@ Gps gps;          // GPS sensor
 AM2315C am2315;  // temperature hum sensor
 Sps30 sps30;     // dust sensor
 
+bool packetSent = false, packetQueued = false;
+bool sensorCycle = false, gpsCycle = false;
+int start;
+
 // -----------------------------------------------------------------------------
 // Application
 // -----------------------------------------------------------------------------
 
-/**
- * sleep, turn off LORA and GPS power
- */
 void sleep(int msec) {
   printf("sleep for %d\n", msec);
   ttn_shutdown();
   Serial.flush();
-  disablePeripherals();
+  PMUSavingMode();  // turn off LORA and GPS power
   delay(500);
-  esp_sleep_enable_timer_wakeup( msec * 1000ULL);  // call expects usecs
-  esp_deep_sleep_start();
 
-  // Set the user button to wake the board
-/* TODO 
-  esp_sleep_enable_ext0_wakeup((gpio_num_t)BUTTON_PIN, LOW);  //sleep_interrupt(BUTTON_PIN, LOW);
-  ttn_shutdown();                                            // cleanly shutdown the radio
-
-  // turn on after initial testing with real hardware
-  axp.setPowerOutPut(AXP192_LDO2, AXP202_OFF);  // LORA radio
-  axp.setPowerOutPut(AXP192_LDO3, AXP202_OFF);  // GPS main power
-
+/*
   // FIXME - use an external 10k pulldown so we can leave the RTC peripherals powered off
   // until then we need the following lines
   esp_sleep_pd_config(ESP_PD_DOMAIN_RTC_PERIPH, ESP_PD_OPTION_ON);
@@ -90,10 +74,10 @@ void sleep(int msec) {
   // FIXME change polarity so we can wake on ANY_HIGH instead - that would allow us to use all three buttons (instead of just the first)
   gpio_pullup_en((gpio_num_t)BUTTON_PIN);
   esp_sleep_enable_ext1_wakeup(gpioMask, ESP_EXT1_WAKEUP_ALL_LOW);
+*/
 
-  esp_sleep_enable_timer_wakeup(msec * 1000ULL);  // call expects usecs
+  esp_sleep_enable_timer_wakeup( msec * 1000ULL);  // call expects usecs
   esp_deep_sleep_start();
-  */
 }
 
 void _txCallback() {
@@ -114,159 +98,101 @@ void _rxCallback(unsigned int port, uint8_t* buf, unsigned int len) {
   printf("\n");
 }
 
-/**
- * Init the power manager chip
- * 
- * axp192 power 
-    DCDC1 0.7-3.5V @ 1200mA max -> OLED  // If you turn this off you'll lose comms to the axp192 because the OLED and the axp192 share the same i2c bus, instead use ssd1306 sleep mode
-    DCDC2 -> unused
-    DCDC3 0.7-3.5V @ 700mA max -> ESP32 (keep this on!)
-    LDO1 30mA -> charges GPS backup battery  // charges the tiny J13 battery by the GPS to power the GPS ram (for a couple of days), can not be turned off
-    LDO2 200mA -> LORA
-    LDO3 200mA -> GPS
- */
-/*
-void axp192Init() {
-  if (!axp.begin(Wire, AXP192_SLAVE_ADDRESS)) {
-    Serial.println("AXP192 Begin PASS");
-  } else {
-    Serial.println("AXP192 Begin FAIL");
-    return;
+void acquireSensorData()
+{
+  printf("sensor cycle\n");
+  // read dust
+  if (!sps30.init())  {
+    sleep(60000); // Error, do deepsleep retry afer one minute
   }
-  //axp.setChgLEDMode(LED_BLINK_4HZ);
-  //printf("DCDC1=%d, DCDC2=%d, LDO2=%d, LDO3=%d, DCDC3=%d, EXten=%d\n",
-  //       axp.isDCDC1Enable(), axp.isDCDC2Enable(), axp.isLDO2Enable(), axp.isLDO3Enable(), axp.isDCDC3Enable(), axp.isExtenEnable());
+  if( bootCount == 1 )
+    sps30.startManaualFanCleaning();
 
-  axp.setPowerOutPut(AXP192_LDO2, AXP202_ON);  // LORA radio
-  //axp.setPowerOutPut(AXP192_LDO3, AXP202_ON);  // GPS main power
-  axp.setPowerOutPut(AXP192_DCDC2, AXP202_ON);
-  axp.setPowerOutPut(AXP192_EXTEN, AXP202_ON);
-  axp.setPowerOutPut(AXP192_DCDC1, AXP202_ON);
-  axp.setDCDC1Voltage(3300);  // for the OLED power
+  if (sps30.read())  {
+    msg.pm1_0 = sps30.pm1_0 * 100;
+    msg.pm2_5 = sps30.pm2_5 * 100;
+    msg.pm10 = sps30.pm10 * 100;
+    printf("pm1=%d pm2.5=%d pm10=%d\n", msg.pm1_0, msg.pm2_5, msg.pm10);
+  }
+  // read temperature and humidity
+  if (!am2315.begin())  {
+    printf("am2315 module not found!\n");
+    sleep(60000); // Error, do deepsleep retry afer one minute
+  }
+  if (am2315.read() == AM2315C_OK)  {
+    msg.temp = am2315.getTemperature() * 100;
+    msg.hum = am2315.getHumidity() * 100;
+    msg.batt = PMU->getBattVoltage();
+    printf("temp=%d  hum=%d\n", msg.temp, msg.hum);
+  }
+}
 
- //printf("DCDC1=%d, DCDC2=%d, LDO2=%d, LDO3=%d, DCDC3=%d, EXten=%d\n",
- //        axp.isDCDC1Enable(), axp.isDCDC2Enable(), axp.isLDO2Enable(), axp.isLDO3Enable(), axp.isDCDC3Enable(), axp.isExtenEnable());
-
-//  int cur = axp.getChargeControlCur();
-//  Serial.printf("Current charge control current = %d mA \n", cur);
-  //axp.setChargeControlCur( 15);
-  //Serial.printf("Set charge control current 500 mA \n");
-  //cur = axp.getChargeControlCur();
- // Serial.printf("Current charge control current = %d mA \n", cur);
- 
-  pinMode(PMU_IRQ, INPUT_PULLUP);
-  attachInterrupt(
-    PMU_IRQ, [] {
-      pmu_irq = true;
-    },
-    FALLING);
-
-  axp.adc1Enable(AXP202_BATT_CUR_ADC1, 1);
-  axp.enableIRQ(AXP202_VBUS_REMOVED_IRQ | AXP202_VBUS_CONNECT_IRQ | AXP202_BATT_REMOVED_IRQ | AXP202_BATT_CONNECT_IRQ, 1);
-  axp.clearIRQ();
-*/
-/*
-  if (axp.isChargeing()) {
-    Serial.printf("Charging\r\n");
-  } 
-} */
+void acquireStatusData()
+{
+  printf("gps cycle\n");
+  PMU->enablePowerOutput(XPOWERS_ALDO3);  // set GPS POWER on !!!
+  delay(500);  // wait a moment, he power is back on.
+  if (!gps.init() )
+     sleep(60000); // Error, do deepsleep retry afer one minute
+   
+  if( gps.read())  {
+    stat.lat = gps.lat;
+    stat.lng = gps.lng;
+    stat.hdop = gps.hdop;
+    stat.alt = gps.alt;
+  }
+  stat.version = APP_VERSION * 100;
+  stat.batt = PMU->getBattVoltage();
+  stat.cputemp = temperatureRead() * 100;
+}
 
 void setup() {
   Serial.begin(115200);
-  delay(200);
-  setupBoards();
- // When the power is turned on, a delay is required.
-  delay(1000);
- 
-  if( bootCount >= 1000)   // force a new join after n cycles
+
+  if( !PMUsetup() ) {
+    printf( "PMU error\n");
+    sleep( 60000);  // Error, do deep sleep retry afer one minute
+  }
+
+  if( bootCount >= 100)   // force a new join after n cycles
     bootCount = 1;
   else
-   bootCount++;
+    bootCount++;
 
   printf( "bootCount = %d\n", bootCount);
-  //wakeCause = esp_sleep_get_wakeup_cause();
-  //Serial.printf("booted, wake cause %d (boot count %d)\n", wakeCause, bootCount);
-
-  Wire.begin(I2C_SDA, I2C_SCL);
-  //axp192Init();
-
-  // Buttons & LED
-  //pinMode(BUTTON_PIN, INPUT_PULLUP);
-
   if (bootCount == 1)
     ttn_erase_prefs();
 
   // TTN setup
   if (!ttn_setup()) {
     printf("Radio module not found!\n");
-    sleep( 60000);  //deepsleep retry afer one minute
+    sleep( 60000);  //  Error, do deepsleep retry afer one minute
   }
 
+// LoRa Tx Rx callbacks
   ttn_register_rxReady(_rxCallback);
   ttn_register_txReady(_txCallback);
 
-  // init and read sensors
-
-  if (bootCount % 100) {      // send after n sensor messages a status message
+// after n sensor cycles, a statuscycle is processed
+  if (bootCount % 10) {      
     sensorCycle = true;
-    // read dust
-    if( sps30.init() && sps30.read() ) {
-      msg.pm1_0 = sps30.pm1_0 * 100;
-      msg.pm2_5 = sps30.pm2_5 * 100;
-      msg.pm10 = sps30.pm10 * 100;
-      printf("pm1=%d pm2.5=%d pm10=%d\n", msg.pm1_0, msg.pm2_5, msg.pm10);
-    }
-    // read temperature and humidity
-    if( am2315.begin() && am2315.read() == AM2315C_OK) {
-      msg.temp = am2315.getTemperature() * 100;
-      msg.hum = am2315.getHumidity() * 100;
-      printf("temp=%d  hum=%d\n", msg.temp, msg.hum );
-    }
-    //msg.batt = (int16_t)axp.getBattVoltage();
-    //printf("BattVoltage = %d\n", msg.batt);
+    acquireSensorData();
   }
   // send status and gps position
   else {
-    //axp.setPowerOutPut(AXP192_LDO3, AXP202_ON); // set GPS POWER on
     gpsCycle = true;
-    gps.init();
-    gps.read();
-    stat.lat = gps.lat;
-    stat.lng = gps.lng;
-    stat.hdop =gps.hdop;
-    stat.alt = gps.alt;
-    stat.version = APP_VERSION * 100;
-    //stat.batt = (int16_t)axp.getBattVoltage();
-    //stat.cputemp = (int16_t)axp.getTemp() * 100;
+    acquireStatusData();
   }
   start = millis();
   printf("setup end\r\n");
 }
 
-static uint8_t testmsg[] = "1234567890";
+// the loop function processes the send to TTN message 
 void loop() {
 
   ttn_loop();
   
-///  if(millis() - start > 5000) {
- //     printf("ttn_connected %d\r\n", ttn_connected());
- //     start = millis();
- // }
-/*
   if( ttn_connected() && !packetQueued && !packetSent) {
-    //printf("ttn_send\n");
-    ttn_send((uint8_t*)testmsg, sizeof(testmsg)-1, 1);
-    packetQueued = true;
-  }
-
-  if( packetSent || millis() - start > 10000) {
-    packetSent = false;
-    sleep( 15000);
-  }
-*/
-
-  if( ttn_connected() && !packetQueued && !packetSent) {
-    //printf("ttn_send\n");
     if( sensorCycle )
       ttn_send((uint8_t*)&msg, sizeof(msg), 15);
     else
@@ -274,13 +200,14 @@ void loop() {
     packetQueued = true;
   }
 
-  // if packet has been sent, or wait max 10 sec for completing the ttn msg, then start deepsleep
+  // if packet has been sent, or asume the packet has been sent after 10 sec, 
+  // start the deepsleep
   if( packetSent  || millis() - start > 10000) {
     packetSent = false;
     
     if( gpsCycle )
-       sleep( 10000);          // minimum sleep time
+       sleep( 10000);          // do a short sleep, a gps cycle is an in between cycle
     else
-      sleep( SEND_INTERVAL - 10000);
+      sleep( SEND_INTERVAL);  
   }
 }

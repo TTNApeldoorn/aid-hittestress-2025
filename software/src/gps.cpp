@@ -24,51 +24,47 @@
 #include "gps.h"
 
 static TinyGPSPlus tinyGpsPlus;
-//static HardwareSerial serialGPS(GPS_SERIAL_NUM);
 
-
-void Gps::init() {
+boolean Gps::init() {
   lat = lng = 0.0;
   hdop = alt = 0;
   SerialGPS.begin(GPS_BAUD_RATE, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
   delay(100);
+  int start = millis();
+  while( millis() - start < 5000) {
+    if( SerialGPS.available() > 10)
+      return true;
+  }
+  printf("No GPS detected: check wiring and/or power\n");
+  return false;
 }
 
-bool Gps::read() {
+bool Gps::read()
+{
   printf("Gps::read\n");
 
   bool fix = false;
   int i = 0;
   long start = millis();
 
-  // leave loop after timout or
-  // if Vext power is switched off, exit the loop (caused by RGB_LORAWAN Led, be sure that it is deactivated)
-  while (millis() - start < GPS_MAX_WAIT_FOR_LOCK) {
-    if (SerialGPS.available() > 0) {
-      char c = SerialGPS.read();
-      //Serial.print(c);
-      tinyGpsPlus.encode(c);
+  // leave loop after valid location or after timout
+  do
+  {
+    while (SerialGPS.available() > 0)
+    {
+      tinyGpsPlus.encode(SerialGPS.read());
       i++;
-      if (tinyGpsPlus.location.isUpdated()) {     //  deze kan ook ? if (gps.location.isValid())
-        lat = tinyGpsPlus.location.lat();
-        lng = tinyGpsPlus.location.lng();
-        hdop = 1000 * tinyGpsPlus.hdop.hdop();
-        alt = tinyGpsPlus.altitude.meters(); 
-        fix = true;
-        break;
-      }
     }
-  }
-  printf("GPS chars read:%d\n", i);
+    fix = tinyGpsPlus.location.isValid();
+  } while (!fix && millis() - start < GPS_MAX_WAIT_FOR_LOCK);
 
-  Serial.print("lat: ");
-  Serial.print(lat);
-  Serial.print(" lon: ");
-  Serial.print(lng);
-  Serial.print(" alt: ");
-  Serial.print(alt);
-  Serial.print(" hdop: ");
-  Serial.println(hdop / 1000.0);
+  lat = tinyGpsPlus.location.lat();
+  lng = tinyGpsPlus.location.lng();
+  hdop = 1000 * tinyGpsPlus.hdop.hdop();
+  alt = tinyGpsPlus.altitude.meters();
+
+  printf("GPS chars read:%d\n", i);
+  printf("Location: %f, %f\n", lat, lng);
+
   return fix;
 }
-

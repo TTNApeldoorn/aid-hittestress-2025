@@ -18,12 +18,12 @@
 */
 
 #include <sps30.h>
-#include "LoRaBoards.h"
+#include "utilities.h"
 #include "mysps30.h"
 
 
 // SPS30 support
-#define auto_clean_days 4
+//#define auto_clean_days 4,   no sense, (ESP is restarted each cycle), replaced by manual auto clean 
 struct sps30_measurement m;
 
 
@@ -36,21 +36,24 @@ bool Sps30::init() {
     if( retry-- < 0)
       return false;
   }
-  //int16_t ret = sps30_set_fan_auto_cleaning_interval_days(auto_clean_days);  // Used to drive the fan for pre-defined sequence every X days
-  //if (ret) {
-  //  Serial.print("error setting the auto-clean interval: ");
-  //  Serial.println( ret);
-  //}
   return true;
 }
+
+void Sps30::startManaualFanCleaning() { 
+    sps30_start_measurement();
+    int ret = sps30_start_manual_fan_cleaning();
+    delay(12000); // fan cleaning takes about 10 sec. so wait...
+    printf("startManaualFanCleaning result: %d\n", ret);
+}    
+
 bool Sps30::read() {
   //printf("Sps30::read\n");
   pm10 = pm2_5 = pm1_0 = 0.0;
 
   sps30_start_measurement();  // Start of loop start fan to flow air past laser sensor
-  delay(4000);                //Wait 4+1 seconds while fan is active before read data
+  delay(9000);                //Wait 9+1 seconds while fan is active before read data
   
-  for(int i=0; i<5; i++) {
+  for(int i=0; i<10; i++) {
     delay( 1000);
     if( !_read()) {
       sps30_stop_measurement();
@@ -62,9 +65,9 @@ bool Sps30::read() {
     pm1_0 += m.mc_1p0;
   } 
 
-  pm10  /= 5.0;
-  pm2_5 /= 5.0; 
-  pm1_0 /= 5.0;;
+  pm10  /= 10.0;
+  pm2_5 /= 10.0; 
+  pm1_0 /= 10.0;;
   //printf("PM1.0=%.2f PM2.5=%.2f PM10=%.2f\n", pm1_0, pm2_5, pm10);
   sps30_stop_measurement();  //Disables Fan 
   return true;

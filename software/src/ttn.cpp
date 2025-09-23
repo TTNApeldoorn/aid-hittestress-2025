@@ -23,24 +23,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "Arduino.h"
 #include <lmic.h>
 #include <hal/hal.h>
 #include <SPI.h>
 #include <Preferences.h>
-#include "LoRaBoards.h"
+#include "utilities.h"
 
 // -----------------------------------------------------------------------------
 // Globals
 // -----------------------------------------------------------------------------
-
-
-// Chose LSB mode on the console and then copy it here.
-static const u1_t PROGMEM APPEUI[8] = {0x67, 0xDC, 0x03, 0xD0, 0x7E, 0xD6, 0xB3, 0x70};
-// LSB mode
-static const u1_t PROGMEM DEVEUI[8] = {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-// MSB mode
-static const u1_t PROGMEM APPKEY[16] = {0xCB, 0x90, 0x90, 0x08B, 0x45, 0x15, 0x74, 0xE3, 0x12, 0xF3, 0x9E, 0xAD, 0xBC, 0x05, 0xCF, 0x08};
 
 
 const lmic_pinmap lmic_pins = {
@@ -50,17 +41,13 @@ const lmic_pinmap lmic_pins = {
     .dio = {RADIO_DIO0_PIN, RADIO_DIO1_PIN, RADIO_DIO2_PIN}
 };
 
-static osjob_t sendjob;
+//static osjob_t sendjob;
 static int spreadFactor = DR_SF7;
-static int joinStatus = EV_JOINING;
-static const unsigned TX_INTERVAL = 30;
-static String lora_msg = "";
+//static int joinStatus = EV_JOINING;
+//static const unsigned TX_INTERVAL = 30;
+//static String lora_msg = "";
 
-void os_getArtEui (u1_t *buf) {memcpy_P(buf, APPEUI, 8);}
-void os_getDevEui (u1_t *buf) {memcpy_P(buf, DEVEUI, 8);}
-void os_getDevKey (u1_t *buf) { memcpy_P(buf, APPKEY, 16);}
 
-// ########## OLD MM 
 // Message counter, stored in RTC memory, survives deep sleep.
 static RTC_DATA_ATTR uint32_t count = 1;
 
@@ -74,36 +61,16 @@ static void parseHexReverse( u1_t *byteBuffer, const char* str);
 static void printKeys(u4_t netid, devaddr_t devaddr, u1_t* nwkKey, u1_t* artKey);
 
 // handle TTN OTAA keys
-
 static char deveui[32];  // generated from board id
-/*extern void os_getDevEui (u1_t* buf) { parseHexReverse( buf, deveui);}
-extern void os_getJoinEui (u1_t* buf) { parseHexReverse( buf, APPEUI);}
-extern void os_getNwkKey (u1_t* buf) { parseHex( buf, APPKEY);}
+extern void os_getDevEui (u1_t* buf) { parseHexReverse( buf, deveui);}
+extern void os_getArtEui (u1_t* buf) { parseHexReverse( buf, APPEUI);}
+extern void os_getDevKey (u1_t* buf) { parseHex( buf, APPKEY);}
 
-u1_t os_getRegion (void) { return LMIC_regionCode(0); } */
-// ############ end OLD MM
+//u1_t os_getRegion (void) { return LMIC_regionCode(0); } 
 
 // -----------------------------------------------------------------------------
 // Private methods
 // -----------------------------------------------------------------------------
-/*
-void do_send(osjob_t *j)
-{
-    if (joinStatus == EV_JOINING) {
-        Serial.println(F("Not joined yet"));
-        // Check if there is not a current TX/RX job running
-        os_setTimedCallback(&sendjob, os_getTime() + sec2osticks(TX_INTERVAL), do_send);
-
-    } else if (LMIC.opmode & OP_TXRXPEND) {
-        Serial.println(F("OP_TXRXPEND, not sending"));
-    } else {
-        Serial.println(F("OP_TXRXPEND,sending ..."));
-        static uint8_t mydata[] = "Hello, world!";
-        // Prepare upstream data transmission at the next possible time.
-        LMIC_setTxData2(1, mydata, sizeof(mydata) - 1, 0);
-        os_setTimedCallback(&sendjob, os_getTime() + sec2osticks(TX_INTERVAL), do_send);
-    }
-} */
 
 void onEvent (ev_t ev)
 {
@@ -115,13 +82,13 @@ void onEvent (ev_t ev)
 
         if (LMIC.txrxFlags & TXRX_ACK) {
             Serial.println(F("Received ack"));
-            lora_msg =  "Received ACK.";
+            //lora_msg =  "Received ACK.";
         }
         if( txCallback != NULL) {
           txCallback();
         }
 
-        lora_msg = "rssi:" + String(LMIC.rssi) + " snr: " + String(LMIC.snr);
+        //lora_msg = "rssi:" + String(LMIC.rssi) + " snr: " + String(LMIC.snr);
 
         if (LMIC.dataLen) {
             // data received in rx slot after tx
@@ -139,18 +106,18 @@ void onEvent (ev_t ev)
         break;
     case EV_JOINING:
         Serial.println(F("EV_JOINING: -> Joining..."));
-        lora_msg = "OTAA joining....";
-        joinStatus = EV_JOINING;
+        //lora_msg = "OTAA joining....";
+        //joinStatus = EV_JOINING;
 
         break;
     case EV_JOIN_FAILED:
         Serial.println(F("EV_JOIN_FAILED: -> Joining failed"));
-        lora_msg = "OTAA Joining failed";
+        //lora_msg = "OTAA Joining failed";
         break;
     case EV_JOINED:
         Serial.println(F("EV_JOINED"));
-        lora_msg = "Joined!";
-        joinStatus = EV_JOINED;
+        //lora_msg = "Joined!";
+        //joinStatus = EV_JOINED;
 
         delay(3);
         // Disable link check validation (automatically enabled
@@ -158,7 +125,7 @@ void onEvent (ev_t ev)
         LMIC_setLinkCheckMode(0);
         // save network keys to permanent storage 
         {
-          printKeys(LMIC.netid, LMIC.devaddr, LMIC.nwkKey, LMIC.artKey);
+          //printKeys(LMIC.netid, LMIC.devaddr, LMIC.nwkKey, LMIC.artKey);
           Preferences p;
           if( p.begin("lora", false)) {
               p.putUInt("netId", LMIC.netid);
@@ -184,7 +151,7 @@ void onEvent (ev_t ev)
         break;
     }
 }
-
+/*
 u1_t readReg (u1_t addr)
 {
     hal_pin_nss(0);
@@ -192,17 +159,16 @@ u1_t readReg (u1_t addr)
     u1_t val = hal_spi(0x00);
     hal_pin_nss(1);
     return val;
-}
+} */
 
 bool ttn_setup(void) {
-
   // get unique deveui from chip id
   uint64_t chipid = ESP.getEfuseMac();   //The chip ID is essentially its MAC address(length: 6 bytes).
   sprintf(deveui, "%08X%08X", (uint16_t)(chipid >> 32), (uint32_t)chipid);
   printf("DEVEUI=%s\n", deveui);
 
-  // SPI interface
-  // SPI.begin(RADIO_SCLK_PIN, RADIO_MISO_PIN, RADIO_MOSI_PIN);
+  // LoRa SPI interface
+  SPI.begin(RADIO_SCLK_PIN, RADIO_MISO_PIN, RADIO_MOSI_PIN);
 
 #ifdef  RADIO_TCXO_ENABLE
     pinMode(RADIO_TCXO_ENABLE, OUTPUT);
@@ -257,7 +223,7 @@ bool ttn_setup(void) {
     bool keysgood = p.getBytes("nwkKey", nwkKey, sizeof(nwkKey)) == sizeof(nwkKey) && 
                    p.getBytes("artKey", artKey, sizeof(artKey)) == sizeof(artKey);
     p.end();  // close our prefs
-    printKeys(netId, devAddr, nwkKey, artKey);
+    //printKeys(netId, devAddr, nwkKey, artKey);
 
     if (!keysgood) {
      // We have not yet joined a network, start a full join attempt
@@ -276,117 +242,6 @@ bool ttn_setup(void) {
     return true;
 }
 
-void ttn_loop(void) {
-    os_runloop_once();
-}
-
-// # OLD MM 
-/*
-// LMIC library will call this method when an event is fired
-void onLmicEvent (ev_t ev) {
-    Serial.print(os_getTime());
-    Serial.print(": ");
-    switch(ev) {
-        case EV_SCAN_TIMEOUT:
-            Serial.println(F("EV_SCAN_TIMEOUT"));
-            break;
-        case EV_BEACON_FOUND:
-            Serial.println(F("EV_BEACON_FOUND"));
-            break;
-        case EV_BEACON_MISSED:
-            Serial.println(F("EV_BEACON_MISSED"));
-            break;
-        case EV_BEACON_TRACKED:
-            Serial.println(F("EV_BEACON_TRACKED"));
-            break;
-        case EV_JOINING:
-            Serial.println(F("EV_JOINING"));
-            break;
-        case EV_JOINED:
-            Serial.println(F("EV_JOINED"));
-            //u4_t netid = 0;
-            //devaddr_t devaddr = 0;
-            //u1_t nwkKey[16];
-            //u1_t artKey[16];
-            //LMIC_getSessionKeys(&netid, &devaddr, nwkKey, artKey);
-            //printKeys(LMIC.netid, LMIC.devaddr, LMIC.lceCtx.nwkSKey, LMIC.lceCtx.appSKey);
-            // save network keys to permanent storage 
-            {
-              Preferences p;
-              if( p.begin("lora", false)) {
-                p.putUInt("netId", LMIC.netid);
-                p.putUInt("devAddr", LMIC.devaddr);
-                p.putBytes("nwkKey", LMIC.lceCtx.nwkSKey, 16);
-                p.putBytes("artKey", LMIC.lceCtx.appSKey, 16);
-                p.end();
-              }
-            }
-            // Disable link check validation (automatically enabled
-            // during join, but not supported by TTN at this time).
-            LMIC_setLinkCheckMode(0);
-            break;
-        case EV_RFU1:
-            Serial.println(F("EV_RFU1"));
-            break;
-        case EV_JOIN_FAILED:
-            Serial.println(F("EV_JOIN_FAILED"));
-            break;
-        case EV_REJOIN_FAILED:
-            Serial.println(F("EV_REJOIN_FAILED"));
-            break;
-            break;
-        case EV_TXCOMPLETE:
-            Serial.println(F("EV_TXCOMPLETE (includes waiting for RX windows)"));
-            if (LMIC.txrxFlags & TXRX_ACK)
-              Serial.println(F("Received ack"));
-            if (LMIC.dataLen) {
-              Serial.print(F("Received "));
-              Serial.print(LMIC.dataLen);
-              Serial.println(F(" bytes of payload"));
-            }
-            break;
-        case EV_LOST_TSYNC:
-            Serial.println(F("EV_LOST_TSYNC"));
-            break;
-        case EV_RESET:
-            Serial.println(F("EV_RESET"));
-            break;
-        case EV_RXCOMPLETE:
-            // data received in ping slot
-            Serial.println(F("EV_RXCOMPLETE"));
-            break;
-        case EV_LINK_DEAD:
-            Serial.println(F("EV_LINK_DEAD"));
-            break;
-        case EV_LINK_ALIVE:
-            Serial.println(F("EV_LINK_ALIVE"));
-            break;
-        case EV_SCAN_FOUND:
-            Serial.println(F("EV_SCAN_FOUND"));
-            break;
-        case EV_TXSTART:
-            Serial.println(F("EV_TXSTART"));
-            break;
-        case EV_TXDONE:
-            Serial.println(F("EV_TXDONE"));
-            break;
-        case EV_DATARATE:
-            Serial.println(F("EV_DATARATE"));
-            break;
-        case EV_START_SCAN:
-            Serial.println(F("EV_START_SCAN"));
-            break;
-        case EV_ADR_BACKOFF:
-            Serial.println(F("EV_ADR_BACKOFF"));
-            break;
-
-         default:
-            Serial.print(F("Unknown event: "));
-            Serial.println(ev);
-            break;
-    }
-}
- */   // END OLD #########
 
 // -----------------------------------------------------------------------------
 // Public methods
@@ -399,55 +254,6 @@ extern void ttn_register_rxReady( void (*rxReady)(unsigned int, uint8_t*, unsign
 extern void ttn_register_txReady( void (*txReady)()) {
     txCallback = txReady;
 }
-
-/*extern bool ttn_setup() {
-  // get unique deveui from chip id
-  uint64_t chipid = ESP.getEfuseMac();   //The chip ID is essentially its MAC address(length: 6 bytes).
-  sprintf(deveui, "%08X%08X", (uint16_t)(chipid >> 32), (uint32_t)chipid);
-  printf("DEVEUI=%s\n", deveui);
-
-  // SPI interface
-  // SPI.begin(RADIO_SCLK_PIN, RADIO_MISO_PIN, RADIO_MOSI_PIN);
-    
-  // LMIC init
-    os_init();
-    LMIC_reset();
-
-#ifdef CLOCK_ERROR
-  LMIC_setClockError(MAX_CLOCK_ERROR * CLOCK_ERROR / 100);
-#endif
-  // Disable link check validation  // to be checked MM 
-  //LMIC_setLinkCheckMode(0);
-
-  // Set default rate and transmit power for uplink (note: txpow seems to be ignored by the library)
-  // LMIC_setDrTxpow(DR_SF9, 14);
-  //LMIC_setAdrMode(0);
-
-  Preferences p;
-  p.begin("lora", true);  // we intentionally ignore failure here
-  uint32_t netId = p.getUInt("netId", UINT32_MAX);
-  uint32_t devAddr = p.getUInt("devAddr", UINT32_MAX);
-  uint8_t nwkKey[16], artKey[16];
-  bool keysgood = p.getBytes("nwkKey", nwkKey, sizeof(nwkKey)) == sizeof(nwkKey) && 
-                  p.getBytes("artKey", artKey, sizeof(artKey)) == sizeof(artKey);
-  p.end();  // close our prefs
-  //printKeys(netId, devAddr, nwkKey, artKey);
-
-  if (!keysgood) {
-    // We have not yet joined a network, start a full join attempt
-    // Make LMiC initialize the default channels, choose a channel, and
-    // schedule the OTAA join
-    count = 1;
-    Serial.println("No session saved, joining from scratch");
-    LMIC_startJoining();
-  }
-  else {
-    Serial.println("Rejoining saved session");
-    LMIC_setSession(netId, devAddr, nwkKey, artKey);
-  }
-  p.end();
-  return true;
-} */
 
 /// Blow away our prefs (i.e. to rejoin from scratch)
 extern void ttn_erase_prefs() {
@@ -481,9 +287,9 @@ void ttn_shutdown() {
   LMIC_shutdown();
 }
 
-//extern void ttn_loop() {
-  //os_runstep();
-//}
+void ttn_loop(void) {
+    os_runloop_once();
+}
 
 // local helper fumctions
 static void printKeys(u4_t netid, devaddr_t devaddr, u1_t* nwkKey, u1_t* artKey) {

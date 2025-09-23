@@ -18,6 +18,8 @@
 
 /***********************************  Model definition end 型号定义结尾 ***********************************/
 
+#include <Arduino.h>
+
 #define UNUSED_PIN    
 #define USING_SX1276               (0)
 #define GPS_RX_PIN                  34
@@ -59,11 +61,14 @@
 #define RADIO_TYPE_STR  "SX1276"
 
 #define SerialGPS Serial1
-#define GPS_MAX_WAIT_FOR_LOCK 15 * 1000
-#define SEND_INTERVAL 30 *1000
+#define GPS_MAX_WAIT_FOR_LOCK 120 * 1000
+#define SEND_INTERVAL 120 *1000    // the real interval will be ca 25 sec longer, due to PM processing
 #define APP_VERSION  4.0
 
-
+// specify here TTN OTAA keys
+#define APPEUI "70B3D57ED001FE1F"
+#define APPKEY "46BF7A1A2E959FE9A6E8AE1212E52235"
+// DEVEU is obtained from ESP board id
 
 
 
