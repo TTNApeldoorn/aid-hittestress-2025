@@ -33,7 +33,7 @@ The **platformio.ini** takes care for the required settings end libraries. Most 
 
 ## Instructions
 ### LoRaWan TTN keys
-In the file **configuration.h** the TTN keys APPEUI an APPKEY are defined.
+The file **utilities.h** defines the TTN keys APPEUI and APPKEY.
 The unique DEVEUI key is obtained from the T-BEAM board id.
 
 ## TTN interface
@@ -61,4 +61,5 @@ Example JSON measurement message:
 
 Example JSON status message:
 > {"latitude":52.224578,"longitude":6.0061902,"alt":0.0,"hdop":1.61,vbat":4.099,"SwVer":3.02 }
+
 
