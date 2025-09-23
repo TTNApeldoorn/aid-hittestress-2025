@@ -22,7 +22,7 @@ More info see https://github.com/Xinyuan-LilyGO/LilyGo-LoRa-Series
 
 ### Prerequisites:
 - Visual Studio with Platform IO
-- LMIC-Arduino
+- LMIC-Arduino LoRa library
 - mikalhart/TinyGPSPlus GPS library
 - sensirion/sensirion-sps particicle matter SPS30 library
 - lewisxhe/XPowersLib power control AXP2101
@@ -61,6 +61,7 @@ Example JSON measurement message:
 
 Example JSON status message:
 > {"latitude":52.224578,"longitude":6.0061902,"alt":0.0,"hdop":1.61,vbat":4.099,"SwVer":3.02 }
+
 
 
 
