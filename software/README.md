@@ -25,7 +25,7 @@ More info see https://github.com/Xinyuan-LilyGO/LilyGo-LoRa-Series
 - mcci-catena/MCCI LoRaWAN LMIC library
 - mikalhart/TinyGPSPlus GPS library
 - sensirion/sensirion-sps particicle matter SPS30 library
-- lewisxhe/AXP202X_Library power control T-Beam
+- lewisxhe/XPowersLib power control AXP2101
 - RobTillaart/AM2315C library for the i2c AM2315C sensor
 - espressif32@6.9.0 platform with board lilygo t-beam
 
@@ -61,6 +61,7 @@ Example JSON measurement message:
 
 Example JSON status message:
 > {"latitude":52.224578,"longitude":6.0061902,"alt":0.0,"hdop":1.61,vbat":4.099,"SwVer":3.02 }
+
 
 
 
