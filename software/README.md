@@ -12,12 +12,12 @@ These climate sensors are designed for the LIFE-IP climate adaption project in A
 - PCB for connecting components
 - Kradex housing 176x126x57mm - IP65
 
-Note that there exist several different types of LilyGo T-Beam versions with different power managent modules and LoRa modules.
-This documentation describes the **LilyGO T-Beam V1.2** with:
+Note that there exist several different types of LilyGo T-Beam versions with different power managent modules and LoRa modules. This documentation describes the **LilyGO T-Beam V1.2** with:
 - AXP2101 power module
 - SX1276 LoRa module
 - NEO-M8N GNSS GPS module
 
+More info see https://github.com/Xinyuan-LilyGO/LilyGo-LoRa-Series
 ## Software 
 
 ### Prerequisites:
@@ -61,6 +61,7 @@ Example JSON measurement message:
 
 Example JSON status message:
 > {"latitude":52.224578,"longitude":6.0061902,"alt":0.0,"hdop":1.61,vbat":4.099,"SwVer":3.02 }
+
 
 
 
