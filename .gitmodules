@@ -1,0 +1,3 @@
+[submodule "hardware/pcb/HittseStress2025/my-KiCad-library"]
+	path = hardware/pcb/HittseStress2025/my-KiCad-library
+	url = git@github.com:pe1mew/my-KiCad-library.git
