@@ -1584,16 +1584,6 @@
 	)
 	(wire
 		(pts
-			(xy 81.28 64.77) (xy 81.28 66.04)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "08399027-d36b-4be5-b81a-d92062e97a21")
-	)
-	(wire
-		(pts
 			(xy 133.35 127) (xy 146.05 127)
 		)
 		(stroke
@@ -1624,16 +1614,6 @@
 	)
 	(wire
 		(pts
-			(xy 81.28 60.96) (xy 81.28 62.23)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "1f368d4d-8b2e-42c0-8e93-1cb4f4c3837e")
-	)
-	(wire
-		(pts
 			(xy 44.45 66.04) (xy 44.45 64.77)
 		)
 		(stroke
@@ -1661,16 +1641,6 @@
 			(type default)
 		)
 		(uuid "2cda1ab9-426f-498d-9ca8-05d57a25e18a")
-	)
-	(wire
-		(pts
-			(xy 86.36 64.77) (xy 81.28 64.77)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "32bbae2a-d36e-4dd4-ad75-551efdd477de")
 	)
 	(wire
 		(pts
@@ -1804,16 +1774,6 @@
 	)
 	(wire
 		(pts
-			(xy 81.28 62.23) (xy 86.36 62.23)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "8d744f65-16c7-4741-92d4-d026ebc35968")
-	)
-	(wire
-		(pts
 			(xy 177.8 72.39) (xy 193.04 72.39)
 		)
 		(stroke
@@ -1874,7 +1834,7 @@
 	)
 	(wire
 		(pts
-			(xy 74.93 60.96) (xy 81.28 60.96)
+			(xy 74.93 60.96) (xy 92.71 60.96)
 		)
 		(stroke
 			(width 0)
@@ -2024,7 +1984,7 @@
 	)
 	(wire
 		(pts
-			(xy 81.28 66.04) (xy 74.93 66.04)
+			(xy 74.93 66.04) (xy 92.71 66.04)
 		)
 		(stroke
 			(width 0)
@@ -2032,7 +1992,7 @@
 		)
 		(uuid "ffd6f520-cabc-49a2-b53e-fb21cc84f825")
 	)
-	(label "5V_U"
+	(label "5V_I"
 		(at 165.1 95.25 180)
 		(effects
 			(font
@@ -2082,7 +2042,7 @@
 		)
 		(uuid "37fef02f-cc9f-41ca-8def-fcc9cd8753c8")
 	)
-	(label "5V_U"
+	(label "3V3"
 		(at 53.34 95.25 0)
 		(effects
 			(font
@@ -2093,7 +2053,7 @@
 		(uuid "401e9fe9-e08e-4878-a59d-e3c43b26636a")
 	)
 	(label "GND"
-		(at 76.2 66.04 0)
+		(at 87.63 66.04 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2253,7 +2213,7 @@
 		(uuid "f20f36fe-80d8-4a2c-891a-f2c5c853c17b")
 	)
 	(label "5V_I"
-		(at 76.2 60.96 0)
+		(at 87.63 60.96 0)
 		(effects
 			(font
 				(size 1.27 1.27)
@@ -2898,75 +2858,6 @@
 			(project "HitteStress2023_pcb"
 				(path "/0b1ba7fb-a496-4717-8ed8-2a7de64e001c"
 					(reference "J1")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Connector:Conn_01x02_Socket")
-		(at 91.44 64.77 0)
-		(mirror x)
-		(unit 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(dnp no)
-		(uuid "caebdf44-082f-4bc0-97fa-f57520669f5b")
-		(property "Reference" "J2"
-			(at 92.71 64.77 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "Conn_01x02_Socket"
-			(at 92.71 62.23 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" "TerminalBlock_Phoenix:TerminalBlock_Phoenix_MPT-0,5-2-2.54_1x02_P2.54mm_Horizontal"
-			(at 91.44 64.77 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Datasheet" "~"
-			(at 91.44 64.77 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(hide yes)
-			)
-		)
-		(property "Description" ""
-			(at 91.44 64.77 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "611ce76a-a33d-41ab-846c-f34d273cc83a")
-		)
-		(pin "2"
-			(uuid "1589a85e-6ce3-4572-9a5b-b6e1a3ef05bf")
-		)
-		(instances
-			(project "HitteStress2023_pcb"
-				(path "/0b1ba7fb-a496-4717-8ed8-2a7de64e001c"
-					(reference "J2")
 					(unit 1)
 				)
 			)
