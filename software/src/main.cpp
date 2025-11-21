@@ -154,7 +154,7 @@ void setup() {
     sleep( 60000);  // Error, do deep sleep retry afer one minute
   }
 
-  if( bootCount >= 100)   // force a new join after n cycles
+  if( bootCount >= 1000)   // force a new join after n cycles (ca 30 hours)
     bootCount = 1;
   else
     bootCount++;
@@ -173,8 +173,8 @@ void setup() {
   ttn_register_rxReady(_rxCallback);
   ttn_register_txReady(_txCallback);
 
-// after n sensor cycles, a statuscycle is processed
-  if (bootCount % 10) {      
+// after 30 sensor cycles, a statuscycle is processed (ca every hour)
+  if (bootCount % 30) {      
     sensorCycle = true;
     acquireSensorData();
   }
@@ -211,3 +211,4 @@ void loop() {
       sleep( SEND_INTERVAL);  
   }
 }
+
