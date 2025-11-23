@@ -19,4 +19,4 @@ The sensors are mounted in lampposts and communicate via LoRAWan with the TTN ne
 
  <img src="hardware/documentation/PXL_20240218_104554043.jpg" width="200" >
 
-Air inlet dust sensor, with insect sreen
+Air inlet particle sensor, with insect sreen
